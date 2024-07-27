@@ -1,0 +1,66 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+-- Function to create and add tools to the player's backpack
+local function setupTools(player)
+    local function createTool(name, onActivated)
+        local tool = Instance.new("Tool")
+        tool.RequiresHandle = false
+        tool.Name = name
+        tool.Activated:Connect(onActivated)
+        return tool
+    end
+
+    -- Tool 1: Simple Teleport Tool
+    local tool1 = createTool("Click TP", function()
+        local mouse = player:GetMouse()
+        local pos = mouse.Hit + Vector3.new(0, 2.5, 0)
+        pos = CFrame.new(pos.X, pos.Y, pos.Z)
+        player.Character.HumanoidRootPart.CFrame = pos
+    end)
+    tool1.Parent = player.Backpack
+
+    -- Tool 2: Tween Teleport Tool
+    local tool2 = createTool("Tween Click TP", function()
+        local mouse = player:GetMouse()
+        local pos = mouse.Hit + Vector3.new(0, 2.5, 0)
+        local humanoidRootPart = player.Character.HumanoidRootPart
+
+        local tweenInfo = TweenInfo.new(
+            1, -- Time in seconds
+            Enum.EasingStyle.Quad,
+            Enum.EasingDirection.Out
+        )
+
+        local tween = TweenService:Create(humanoidRootPart, tweenInfo, {
+            CFrame = CFrame.new(pos.X, pos.Y, pos.Z)
+        })
+
+        tween:Play()
+    end)
+    tool2.Parent = player.Backpack
+end
+
+-- Function to handle player respawn with a delay
+local function onCharacterAdded(character)
+    -- Remove old tools
+    for _, tool in pairs(Players.LocalPlayer.Backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool:Destroy()
+        end
+    end
+
+    -- Wait for 1 second before setting up new tools
+    wait(0.5)
+    
+    -- Setup new tools
+    setupTools(Players.LocalPlayer)
+end
+
+-- Connect to the player's CharacterAdded event
+Players.LocalPlayer.CharacterAdded:Connect(onCharacterAdded)
+
+-- Initial setup when the script runs
+if Players.LocalPlayer.Character then
+    onCharacterAdded(Players.LocalPlayer.Character)
+end
